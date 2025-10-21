@@ -34,7 +34,7 @@ class Environment:
         evader_pos (CellIndex): Starting position of the evader agent.
         """
         # create attributes
-        this._graph = np.zeros((size, size))
+        this._graph = np.full((size, size), Occupancy.EMPTY, dtype=int)
         this._size = size
 
         # place agents
@@ -42,7 +42,7 @@ class Environment:
         this._set(evader_pos, Occupancy.EVADER)
 
         # place obstacles based on density
-        for _ in range(0, math.floor(size * density)):
+        for _ in range(0, math.floor(size**2 * density)):
             while True:
                 row = random.randint(0, size - 1)
                 col = random.randint(0, size - 1)
@@ -86,6 +86,9 @@ class Environment:
         Returns:
             The index of the cell where the agent is located.
         """
+        if agent != Occupancy.PURSUANT and agent != Occupancy.EVADER:
+            print("Not a valid agent")
+            return None
         for i, r in enumerate(this._graph):
             if agent in r:
                 return CellIndex(i, np.where(r == agent)[0])
@@ -94,7 +97,7 @@ class Environment:
 
     def get_neighbors(this, cell: CellIndex) -> list[CellIndex]:
         """
-        Provide the valid (non-obstacle) cells around the given cell.
+        Provide a list of non-obstacle cells around the given cell. This could include a neighbor containing an agent.
 
         Args:
             cell (CellIndex): Index of cell to find neighbors of.
@@ -111,9 +114,28 @@ class Environment:
                     neighbors.append(neighbor)
         return neighbors
 
+    def get_valid_moves(this, agent: Occupancy) -> list[CellIndex]:
+        """
+        Provide a list of empty cells around a given agent.
+
+        Args:
+            agent (Occupancy): Agent to find the neighbors of.
+
+        Returns:
+            A list containing the index of every empty cell adjacent to the agent.
+        """
+        # setup and find agent
+        agent_cell = this.get_agent_cell(agent)
+        if agent_cell is None:
+            return
+
+        neighbors = this.get_neighbors(agent_cell)
+        empty_spaces = [n for n in neighbors if this._get(n) == Occupancy.EMPTY]
+        return empty_spaces
+
     def get_shortest_distance(this, cell1: CellIndex, cell2: CellIndex):
         """
-        Return the Manhattan distance (or number of steps) between the given cells. Found using breadth-first search.
+        Return the number of steps between the given cells, accounting for obstacles. Found using breadth-first search.
 
         Args:
             cell1: Starting point of Manhattan distance
@@ -160,7 +182,10 @@ class Environment:
         Returns:
             True if so, False otherwise.
         """
-        for cell in this.get_neighbors(this.get_agent_cell(Occupancy.PURSUANT)):
+        pursuant_cell = this.get_agent_cell(Occupancy.PURSUANT)
+        if pursuant_cell is None:
+            return
+        for cell in this.get_neighbors(pursuant_cell):
             if this._get(cell) == Occupancy.EVADER:
                 return True
 
