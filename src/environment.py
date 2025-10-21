@@ -115,13 +115,13 @@ class Environment:
 
     def get_neighbors(self, cell: CellIndex) -> list[CellIndex]:
         """
-        Provide a list of non-obstacle cells around the given cell. This could include a neighbor containing an agent.
+        Provide a list of non-obstacle cells around the given cell. self could include a neighbor containing an agent.
 
         Args:
             cell (CellIndex): Index of cell to find neighbors of.
 
         Returns:
-            A list containing the index of every non-obstacle cell adjacent to this one.
+            A list containing the index of every non-obstacle cell adjacent to self one.
         """
         neighbors = []
         offsets = [(0, -1), (0, 1), (-1, 0), (1, 0)]
