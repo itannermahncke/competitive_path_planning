@@ -5,7 +5,7 @@ import numpy as np
 import random
 import math
 
-from utils import Occupancy, CellIndex
+from src.utils import Occupancy, CellIndex, Action
 
 
 class Environment:
@@ -25,7 +25,7 @@ class Environment:
         evader_pos: CellIndex,
     ):
         """
-        Initialize a new instance of the Environment class.
+        Initialize a new instance of the Environment class with obstacle density.
 
         Args:
             size (int): The dimensions of the square environment
@@ -34,7 +34,7 @@ class Environment:
         evader_pos (CellIndex): Starting position of the evader agent.
         """
         # create attributes
-        self._graph = np.full((size, size), Occupancy.EMPTY, dtype=int)
+        self._graph = np.full((size, size), Occupancy.EMPTY, dtype=Occupancy)
         self._size = size
 
         # place agents
@@ -52,11 +52,31 @@ class Environment:
         print("---------- WORLD INITIALIZED ----------")
    
 
+        # TODO: verify the path between the agents and repair blockage
+
     @property
     def size(self):
         return self._size
 
-    def move_agent(self, current_pos: CellIndex, new_pos: CellIndex) -> bool:
+    def place_additional_obstacles(self, obstacles: list[CellIndex]) -> list[CellIndex]:
+        """
+        Add additional obstacles to the world from a list. If their indexes do not fall within bounds or fall on an occupied cell, they will be skipped.
+
+        Args:
+            obstacles (list[CellIndex]): the obstacles to place
+
+        Returns:
+            A list of the obstacles that were actually placed in the world.
+        """
+        placed_obstacles = []
+        # place obstacles based on list
+        for obs in obstacles:
+            if self.is_within_bounds(obs) and self._get(obs) == Occupancy.EMPTY:
+                self._set(obs, Occupancy.OBSTACLE)
+                placed_obstacles.append(obs)
+        return placed_obstacles
+
+    def move_agent(self, agent: Occupancy, action: Action) -> bool:
         """
         Move an agent from one place to another. No need to specify agent.
 
@@ -67,19 +87,22 @@ class Environment:
         Returns:
             The success of the operation.
         """
-        agent = self._get(current_pos)
         # fail if no agent is there
         if agent != Occupancy.PURSUANT and agent != Occupancy.EVADER:
-            print("No agent found here!")
+            print("Didn't pass an agent!")
             return False
         # fail if dest is not empty
+        cur_pos = self.get_agent_cell(agent)
+        new_pos = CellIndex(
+            cur_pos.row + action.value.dy, cur_pos.col + action.value.dx
+        )
         if self._get(new_pos) != Occupancy.EMPTY:
             print("Illegal move action!")
             return False
         
 
         # move the agent
-        self._set(current_pos, Occupancy.EMPTY)
+        self._set(cur_pos, Occupancy.EMPTY)
         self._set(new_pos, agent)
         return True
 
@@ -159,8 +182,8 @@ class Environment:
         Return the number of steps between the given cells, accounting for obstacles. Found using breadth-first search.
 
         Args:
-            cell1: Starting point of Manhattan distance
-            cell2: Ending point of Manhattan distance
+            cell1: Starting point of BFS distance
+            cell2: Ending point of BFS distance
         """
         # verification
         if not self.is_within_bounds(cell1) or not self.is_within_bounds(cell2):
