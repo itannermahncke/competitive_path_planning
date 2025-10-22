@@ -179,8 +179,8 @@ class Environment:
         Return the number of steps between the given cells, accounting for obstacles. Found using breadth-first search.
 
         Args:
-            cell1: Starting point of Manhattan distance
-            cell2: Ending point of Manhattan distance
+            cell1: Starting point of BFS distance
+            cell2: Ending point of BFS distance
         """
         # verification
         if not self.is_within_bounds(cell1) or not self.is_within_bounds(cell2):

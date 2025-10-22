@@ -7,6 +7,12 @@ class CellIndex:
     row: int
     col: int
 
+    # forces attributes to be simple ints, making CellIndex hashable (necessary for BFS)
+    def __post_init__(self):
+        # ensure values are hashable ints, not np.int64
+        object.__setattr__(self, "row", int(self.row))
+        object.__setattr__(self, "col", int(self.col))
+
 
 @dataclass(frozen=True)
 class Move:
