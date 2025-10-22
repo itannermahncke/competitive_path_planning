@@ -49,6 +49,8 @@ class Environment:
                 if self._graph[row][col] == Occupancy.EMPTY:
                     self._graph[row][col] = Occupancy.OBSTACLE
                     break
+        print("---------- WORLD INITIALIZED ----------")
+   
 
     @property
     def size(self):
@@ -74,6 +76,7 @@ class Environment:
         if self._get(new_pos) != Occupancy.EMPTY:
             print("Illegal move action!")
             return False
+        
 
         # move the agent
         self._set(current_pos, Occupancy.EMPTY)
@@ -213,6 +216,7 @@ class Environment:
         """
         Set the occupancy of a cell in graph at a particular index.
         """
+        # private, only called by environment
         if not self.is_within_bounds(cell):
             print("Not a valid cell!")
             return
