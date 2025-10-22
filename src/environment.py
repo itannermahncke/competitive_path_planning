@@ -51,6 +51,11 @@ class Environment:
                     break
         print("---------- WORLD INITIALIZED ----------")
    
+
+    @property
+    def size(self):
+        return self._size
+
     def move_agent(self, current_pos: CellIndex, new_pos: CellIndex) -> bool:
         """
         Move an agent from one place to another. No need to specify agent.
@@ -96,6 +101,20 @@ class Environment:
                 return CellIndex(i, np.where(r == agent)[0])
         print("Agent could not be found")
         return None
+
+    def get_obstacle_cells(self) -> list[CellIndex]:
+        """
+        Provide a list of cell indexes containing obstacles.
+
+        Returns:
+            A list of all obstacle-occupied cells in the environment.
+        """
+        obstacles = []
+        for i in range(0, self._size):
+            for j in range(0, self._size):
+                if self._get(CellIndex(i, j)) == Occupancy.OBSTACLE:
+                    obstacles.append(CellIndex(i, j))
+        return obstacles
 
     def get_neighbors(self, cell: CellIndex) -> list[CellIndex]:
         """
