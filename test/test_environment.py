@@ -239,24 +239,52 @@ def test_get_obstacle_cells_some(sparse_env: Environment):
 # get_neighbors(), get_valid_moves(), get_shortest_distance()
 
 
-# def test_get_neighbors(simple_env):
-#     """Test that get_neighbors() returns all valid non-obstacle adjacent cells."""
-#     pass
+def test_get_neighbors(empty_env: Environment):
+    """
+    Test that get_neighbors() excludes out-of-bounds cells.
+    """
+    result = empty_env.get_neighbors(CellIndex(0, 0))
+    assert len(result) == 2
+    for n in result:
+        assert n in [CellIndex(1, 0), CellIndex(0, 1)]
 
 
-# def test_get_neighbors_with_obstacles(simple_env):
-#     """Test that get_neighbors() excludes obstacle cells."""
-#     pass
+def test_get_neighbors_with_obstacles(empty_env: Environment):
+    """
+    Test that get_neighbors() excludes obstacle cells.
+    """
+    to_place = [CellIndex(0, 1), CellIndex(2, 1), CellIndex(1, 0), CellIndex(1, 2)]
+    placed = empty_env.place_additional_obstacles(to_place)
+    neighbors = empty_env.get_neighbors(CellIndex(1, 1))
+    assert len(neighbors) == 0
 
 
-# def test_get_shortest_distance_straight_path(simple_env):
-#     """Test BFS distance in an empty grid (no obstacles)."""
-#     pass
+def test_get_shortest_distance_straight_path(empty_env: Environment):
+    """
+    Test BFS distance in an empty grid (no obstacles).
+    """
+    assert (
+        empty_env.get_shortest_distance(
+            empty_env.get_agent_cell(Occupancy.PURSUANT),
+            empty_env.get_agent_cell(Occupancy.EVADER),
+        )
+        == 6
+    )
 
 
-# def test_get_shortest_distance_blocked(simple_env):
-#     """Test BFS returns None when no path exists due to obstacles."""
-#     pass
+def test_get_shortest_distance_blocked(empty_env: Environment):
+    """Test BFS returns None when no path exists due to obstacles."""
+    wall = []
+    for i in range(0, empty_env.size + 1):
+        wall.append(CellIndex(1, i))
+    empty_env.place_additional_obstacles(wall)
+    assert (
+        empty_env.get_shortest_distance(
+            empty_env.get_agent_cell(Occupancy.PURSUANT),
+            empty_env.get_agent_cell(Occupancy.EVADER),
+        )
+        is None
+    )
 
 
 # --- Unit tests for analyzing game state ---
