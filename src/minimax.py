@@ -30,6 +30,9 @@ class MiniMaxAgent:
         self.depth = 3          # number of look-ahead moves
         self.tree_log = []      # this should be a list of lists representing each tree
 
+        self.alpha = float('-inf')
+        self.beta = float('inf')
+
         print(f"------ INITIALIZING {"EVADER" if self.is_maximizer else "PURSUANT"} ------")
 
     def build_tree(self, env: Environment):
@@ -76,7 +79,7 @@ class MiniMaxAgent:
             # TODO: From the given empty index and the other agents location, calculate a value to describe the distance.
             pass
 
-    def minimax(self, nodes, depth):
+    def minimax(self, nodes, alpha, beta, depth):
         """
         Recursive function to output the min/max value.
         Prune the branch if...
@@ -97,8 +100,11 @@ class MiniMaxAgent:
             max_eval = -float('inf')
             for n_sub in nodes:
                 eval = self.minimax(n_sub, depth-1)       # Input args
-                min_eval = max(eval, min_eval)
+                max_eval = max(eval, min_eval)
                 # Pruning implementation
+                if max_eval >= beta:
+                    break
+                alpha = max(alpha, max_eval)
             return max_eval
         else:
             min_eval = float('inf')
@@ -106,7 +112,11 @@ class MiniMaxAgent:
                 eval = self.minimax(n_sub, depth-1)       # Input args
                 min_eval = min(eval, max_eval)
                 # Pruning implementation
+                if min_eval <= alpha:
+                    break
+                beta = min(beta, min_eval)
             return min_eval
+               
 
     def _get_next(self, env, self_pos: CellIndex, opp_pos: CellIndex) -> CellIndex:
         """
@@ -120,7 +130,7 @@ class MiniMaxAgent:
         Return:
             CellIndex of next location
         """
-        self.build_tree(env, self_pos, opp_pos)
+        self.build_tree(env, self_pos, turn) # only want environment, position, and whose turn it is.
         best_move = self.minimax(nodes=self.tree_log[-1], depth=self.depth)
 
         # Internally update location
