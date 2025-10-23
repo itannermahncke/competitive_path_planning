@@ -22,8 +22,8 @@ class GameState:
         if not self.env.is_pursuant_win():
             self.next_move()
             self.update_gamestate
-        else:
-            print("------ GAME OVER. The evader agent was captured. :,( ------")
+        
+        print("------ GAME OVER. The evader agent was captured. ------")
 
     def next_move(self):
         """Calls the minimax alg to compute next best move."""
@@ -33,8 +33,8 @@ class GameState:
         e_loc = self.env.get_agent_cell(Occupancy.EVADER)
 
         # Compute agent's next move from current positions
-        self.p_move = self.p.get_next_move(self.env, p_loc, e_loc)
-        self.e_move = self.e.get_next_move(self.env, e_loc, p_loc)
+        self.p_move = self.p.get_next(self.env, p_loc, e_loc)
+        self.e_move = self.e.get_next(self.env, e_loc, p_loc)
 
     def update_gamestate(self):
         """Call env to move agent after computing"""
