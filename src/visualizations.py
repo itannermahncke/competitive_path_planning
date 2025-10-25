@@ -17,15 +17,9 @@ def gamestate_visual(graph, size, filename="../images/graph"):
         graph: an np array with initalized obstacles and agents
         size: the size n by n graph
     """   
-    # Using it
-    # env = Environment(10, 0.2, CellIndex(2,2), CellIndex(8,8))
-    # # Save image for each ith turn
-    # # filename = "../images/graph_" + str(i)
-    # gamestate_visual(env._graph, env._size)
-
     # Convert Enums to integers if needed
-    # if graph.dtype == object:
-    #     graph = np.vectorize(lambda x: x.value if isinstance(x, Occupancy) else x)(graph)
+    if graph.dtype == object:
+        graph = np.vectorize(lambda x: x.value if isinstance(x, Occupancy) else x)(graph)
 
 
     cmap = colors.ListedColormap([
