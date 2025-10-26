@@ -27,8 +27,6 @@ class Action(Enum):
     RIGHT = Move(0, 1)
 
 
-
-
 class Occupancy(Enum):
     # enum - words mapped to numbers
     EMPTY = 0
@@ -37,7 +35,7 @@ class Occupancy(Enum):
     EVADER = 3
 
 
-class Role():
+class Role:
     MINIMIZER = False
     MAXIMIZER = True
 
@@ -45,17 +43,17 @@ class Role():
 @dataclass
 class Node:
     depth: int
-    state: str
+    state: int
     value: float
     role: Role
-    parent: 'Node' = None
+    parent: int
+    children: list[int]
     prune: bool
 
     def to_dict(self):
         return {
-
-                "depth": self.depth,
-                "state": self.state,
-                "value": self.value,
-                "role": self.role,
+            "depth": self.depth,
+            "state": self.state,
+            "value": self.value,
+            "role": self.role,
         }
