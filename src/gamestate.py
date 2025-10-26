@@ -8,39 +8,52 @@ class GameState:
 
     def __init__(self, size=10, density=0.2, p_start=CellIndex(0,0), e_start=CellIndex(9,9)):
         
-        # Pursuer wants to minimize distance (from Evader)
-        self.p = MiniMaxAgent(Occupancy.PURSUANT, Role.MINIMIZER, p_start)
-        # Evader wants to maximize distance (from Pursuer)
-        self.e = MiniMaxAgent(Occupancy.EVADER, Role.MAXIMIZER, e_start)
+        # Initialize robotic agents
+        p = Occupancy.PURSUANT
+        e = Occupancy.EVADER
+        
+        # Initialize an agent of the minimax algorithm
+        self.agent = MiniMaxAgent()
 
-        self.env = Environment(size, density, p_start, e_start)
+        self.env = Environment(size, density, p_start, e_start, p, e)
 
-        self.p_move: CellIndex = None
-        self.e_move: CellIndex = None
+        
+        self.is_maximizer_turn: Role = Role.MAXIMIZER   # True
+
+        self.move: CellIndex = None
+        self.pos: CellIndex = None
 
     def run_loop(self):
-        if not self.env.is_pursuant_win():
+        """Consant run loop of alternating game moves."""
+        print("----------STARTING GAME.-------------")
+
+        # Run game if pursuant has not won
+        while not self.env.is_pursuant_win():
             self.next_move()
             self.update_gamestate
+
+        # TODO: add in logic for evader, game tie
         
-        print("------ GAME OVER. The evader agent was captured. ------")
+        print("------ GAME OVER. The evader was captured. ------")
 
     def next_move(self):
         """Calls the minimax alg to compute next best move."""
 
-        # Get current position of agents
-        p_loc = self.env.get_agent_cell(Occupancy.PURSUANT)
-        e_loc = self.env.get_agent_cell(Occupancy.EVADER)
+        # Alternating turns
+        if self.is_maximizer_turn == False:
+            self.is_maximizer_turn = Role.MAXIMIZER
+            # Get current position of evader agent
+            self.pos = self.env.get_agent_cell(Occupancy.EVADER)
+        else:
+            self.is_maximizer_turn = Role.MINIMIZER     # Pursuer goes first
+            # Get current position of pursuant agent
+            self.pos = self.env.get_agent_cell(Occupancy.PURSUANT)
 
         # Compute agent's next move from current positions
-        self.p_move = self.p.get_next(self.env, p_loc, e_loc)
-        self.e_move = self.e.get_next(self.env, e_loc, p_loc)
+        self.move = self.agent._get_next(self.env, self.pos, self.is_maximizer_turn)
 
     def update_gamestate(self):
-        """Call env to move agent after computing"""
+        """Move agent's location in the environment"""
 
-        print("---------- MOVING AGENTS ----------")
-
-        # Move agents with best move
-        self.env.move_agent(self.p.loc, self.p_move)    
-        self.env.move_agent(self.e.loc, self.e_move)
+        print("---------- MOVING AGENT ----------")
+        self.env.move_agent(self.pos, self.move)    
