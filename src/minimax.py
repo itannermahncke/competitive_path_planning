@@ -30,9 +30,6 @@ class MiniMaxAgent:
         self.depth = 3          # number of look-ahead moves
         self.tree_log = []      # this should be a list of lists representing each tree
 
-        self.alpha = float('-inf')
-        self.beta = float('inf')
-
         print(f"------ INITIALIZING {"EVADER" if self.is_maximizer else "PURSUANT"} ------")
 
     def build_tree(self, env: Environment):
@@ -79,14 +76,16 @@ class MiniMaxAgent:
             # TODO: From the given empty index and the other agents location, calculate a value to describe the distance.
             pass
 
-    def minimax(self, nodes, alpha, beta, depth):
+    def minimax(self, nodes, alpha=-float('inf'), beta=float('inf'), depth):
         """
         Recursive function to output the min/max value.
-        Prune the branch if...
+        Prune the branch if alpha >= beta (or min/max values are equal), since nothing can be updated parent node. 
         
         Args:
-            nodes - possible paths for current timestep
-            depth - 
+            nodes: possible paths for current timestep
+            alpha:
+            beta:
+            depth:  
         """
         val = 0
 
@@ -98,9 +97,8 @@ class MiniMaxAgent:
 
         if self.is_maximizer:
             max_eval = -float('inf')
-            for n_sub in nodes:
-                eval = self.minimax(n_sub, depth-1)       # Input args
-                max_eval = max(eval, min_eval)
+            for children in nodes:
+                max_eval = max(max_eval, self.minimax(self, children, alpha, beta, depth-1))      
                 # Pruning implementation
                 if max_eval >= beta:
                     break
@@ -108,8 +106,8 @@ class MiniMaxAgent:
             return max_eval
         else:
             min_eval = float('inf')
-            for n_sub in nodes:
-                eval = self.minimax(n_sub, depth-1)       # Input args
+            for children in nodes:
+                min_eval = min(min_eval, self.minimax(self, children, alpha, beta, depth-1)) 
                 min_eval = min(eval, max_eval)
                 # Pruning implementation
                 if min_eval <= alpha:
