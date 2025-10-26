@@ -1,7 +1,7 @@
 import pytest
 import math
 from src.environment import Environment
-from src.utils import Occupancy, CellIndex, Action
+from src.utils import Occupancy, CellIndex, Action, Role
 
 # --- Fixtures ---
 
@@ -74,8 +74,8 @@ def test_correct_agent_placement():
         pursuant_pos=pursuant,
         evader_pos=evader,
     )
-    assert env.get_agent_cell(Occupancy.PURSUANT) == pursuant
-    assert env.get_agent_cell(Occupancy.EVADER) == evader
+    assert env.get_agent_cell(Role.PURSUANT) == pursuant
+    assert env.get_agent_cell(Role.EVADER) == evader
 
 
 def test_correct_obstacle_density():
@@ -166,12 +166,12 @@ def test_move_agent_success(sparse_env: Environment):
     """
     Test that move_agent() successfully moves an agent to an empty cell.
     """
-    origin = sparse_env.get_agent_cell(Occupancy.PURSUANT)
+    origin = sparse_env.get_agent_cell(Role.PURSUANT)
     dest = CellIndex(origin.row, origin.col + 1)
-    success = sparse_env.move_agent(Occupancy.PURSUANT, Action.RIGHT)
+    success = sparse_env.move_agent(Role.PURSUANT, Action.RIGHT)
     assert success
     assert sparse_env._get(origin) == Occupancy.EMPTY
-    assert sparse_env.get_agent_cell(Occupancy.PURSUANT) == dest
+    assert sparse_env.get_agent_cell(Role.PURSUANT) == dest
 
 
 def test_move_correct_agent(sparse_env: Environment):
@@ -179,7 +179,7 @@ def test_move_correct_agent(sparse_env: Environment):
     Test that move_agent() does not adjust the position of the other agent.
     """
     alt_origin = CellIndex(3, 3)
-    success = sparse_env.move_agent(Occupancy.PURSUANT, Action.RIGHT)
+    success = sparse_env.move_agent(Role.PURSUANT, Action.RIGHT)
     assert success
     assert sparse_env._get(alt_origin) == Occupancy.EVADER
 
@@ -189,9 +189,9 @@ def test_move_agent_illegal_occupied(sparse_env: Environment):
     Test that move_agent() fails when target cell is not empty.
     """
     origin = CellIndex(0, 0)
-    success = sparse_env.move_agent(Occupancy.PURSUANT, Action.DOWN)
+    success = sparse_env.move_agent(Role.PURSUANT, Action.DOWN)
     assert not success
-    assert sparse_env.get_agent_cell(Occupancy.PURSUANT) == origin
+    assert sparse_env.get_agent_cell(Role.PURSUANT) == origin
 
 
 def test_move_agent_illegal_bounds(sparse_env: Environment):
@@ -199,9 +199,9 @@ def test_move_agent_illegal_bounds(sparse_env: Environment):
     Test that move_agent() fails when target cell is out of bounds.
     """
     origin = CellIndex(0, 0)
-    success = sparse_env.move_agent(Occupancy.PURSUANT, Action.LEFT)
+    success = sparse_env.move_agent(Role.PURSUANT, Action.LEFT)
     assert not success
-    assert sparse_env.get_agent_cell(Occupancy.PURSUANT) == origin
+    assert sparse_env.get_agent_cell(Role.PURSUANT) == origin
 
 
 # --- Unit tests for locating cells ---
@@ -212,8 +212,8 @@ def test_get_agent_cell(empty_env: Environment):
     """
     Test that get_agent_cell() returns the correct location for each agent.
     """
-    assert empty_env.get_agent_cell(Occupancy.PURSUANT) == CellIndex(0, 0)
-    assert empty_env.get_agent_cell(Occupancy.EVADER) == CellIndex(3, 3)
+    assert empty_env.get_agent_cell(Role.PURSUANT) == CellIndex(0, 0)
+    assert empty_env.get_agent_cell(Role.EVADER) == CellIndex(3, 3)
 
 
 def test_get_obstacle_cells_none(empty_env: Environment):
@@ -265,8 +265,8 @@ def test_get_shortest_distance_straight_path(empty_env: Environment):
     """
     assert (
         empty_env.get_shortest_distance(
-            empty_env.get_agent_cell(Occupancy.PURSUANT),
-            empty_env.get_agent_cell(Occupancy.EVADER),
+            empty_env.get_agent_cell(Role.PURSUANT),
+            empty_env.get_agent_cell(Role.EVADER),
         )
         == 6
     )
@@ -280,8 +280,8 @@ def test_get_shortest_distance_blocked(empty_env: Environment):
     empty_env.place_additional_obstacles(wall)
     assert (
         empty_env.get_shortest_distance(
-            empty_env.get_agent_cell(Occupancy.PURSUANT),
-            empty_env.get_agent_cell(Occupancy.EVADER),
+            empty_env.get_agent_cell(Role.PURSUANT),
+            empty_env.get_agent_cell(Role.EVADER),
         )
         is None
     )

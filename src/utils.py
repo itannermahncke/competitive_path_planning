@@ -23,32 +23,31 @@ class Move:
 class Action(Enum):
     UP = Move(-1, 0)
     DOWN = Move(1, 0)
-    LEFT = Move(0.0, -1)
+    LEFT = Move(0, -1)
     RIGHT = Move(0, 1)
 
 
 class Occupancy(Enum):
-    # enum - words mapped to numbers
-    EMPTY = 0
-    OBSTACLE = 1
-    PURSUANT = 2
-    EVADER = 3
+    EMPTY = -1
+    EVADER = 0  # falsy
+    PURSUANT = 1  # truthy
+    OBSTACLE = 2
 
 
-class Role:
-    MINIMIZER = False
-    MAXIMIZER = True
+class Role(Enum):
+    PURSUANT = False
+    EVADER = True
 
 
 @dataclass
 class Node:
     depth: int
-    state: int
-    value: float
+    id: int
+    pursuant_state: CellIndex
+    evader_state: CellIndex
     role: Role
     parent: int
     children: list[int]
-    prune: bool
 
     def to_dict(self):
         return {

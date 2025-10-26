@@ -5,7 +5,7 @@ import numpy as np
 import random
 import math
 
-from src.utils import Occupancy, CellIndex, Action
+from src.utils import Occupancy, Role, CellIndex, Action
 
 
 class Environment:
@@ -23,8 +23,6 @@ class Environment:
         density: float,
         pursuant_pos: CellIndex,
         evader_pos: CellIndex,
-        pursuant: Occupancy,
-        evader: Occupancy,
     ):
         """
         Initialize a new instance of the Environment class with obstacle density.
@@ -38,17 +36,13 @@ class Environment:
             evader (Occupany): An evader agent
 
         """
-        # Create agents
-        self.PURSUANT: Occupancy = pursuant
-        self.EVADER: Occupancy = evader
-
         # create attributes
         self._graph = np.full((size, size), Occupancy.EMPTY, dtype=Occupancy)
         self._size = size
 
         # place agents
-        self._set(pursuant_pos, self.PURSUANT)
-        self._set(evader_pos, self.EVADER)
+        self._set(pursuant_pos, Occupancy.PURSUANT)
+        self._set(evader_pos, Occupancy.EVADER)
 
         # place obstacles based on density
         for _ in range(0, math.floor(size**2 * density)):
@@ -59,10 +53,6 @@ class Environment:
                 if self._graph[row][col] == Occupancy.EMPTY:
                     self._graph[row][col] = Occupancy.OBSTACLE
                     break
-        print("---------- WORLD INITIALIZED ----------")
-   
-
-        # TODO: verify the path between the agents and repair blockage
 
     @property
     def size(self):
@@ -86,21 +76,17 @@ class Environment:
                 placed_obstacles.append(obs)
         return placed_obstacles
 
-    def move_agent(self, agent: Occupancy, action: Action) -> bool:
+    def move_agent(self, agent: Role, action: Action) -> bool:
         """
-        Move an agent from one place to another. No need to specify agent.
+        Move an agent from one place to another.
 
         Args:
-            current_pos (CellIndex): Current agent location.
-            new_pos (CellIndex): Desired agent location.
+            agent (Role): agent to move
+            action (Action): action to enact
 
         Returns:
             The success of the operation.
         """
-        # fail if no agent is there
-        if agent != self.PURSUANT and agent != self.EVADER:
-            print("Didn't pass an agent!")
-            return False
         # fail if dest is not empty
         cur_pos = self.get_agent_cell(agent)
         new_pos = CellIndex(
@@ -109,26 +95,23 @@ class Environment:
         if self._get(new_pos) != Occupancy.EMPTY:
             print("Illegal move action!")
             return False
-        
 
         # move the agent
         self._set(cur_pos, Occupancy.EMPTY)
-        self._set(new_pos, agent)
+        self._set(new_pos, self._roleToOccupancy(agent))
         return True
 
-    def get_agent_cell(self, agent: Occupancy) -> CellIndex:
+    def get_agent_cell(self, agent: Role) -> CellIndex:
         """
         Find and return an agent's location in the environment.
 
         Args:
-            agent (Occupancy): The enumerated agent to locate.
+            agent (Role): The agent to locate.
 
         Returns:
             The index of the cell where the agent is located.
         """
-        if agent != self.PURSUANT and agent != self.EVADER:
-            print("Not a valid agent")
-            return None
+        agent = self._roleToOccupancy(agent)
         for i, r in enumerate(self._graph):
             if agent in r:
                 return CellIndex(i, np.where(r == agent)[0])
@@ -151,29 +134,29 @@ class Environment:
 
     def get_neighbors(self, cell: CellIndex) -> list[CellIndex]:
         """
-        Provide a list of non-obstacle cells around the given cell. self could include a neighbor containing an agent.
+        Provide a list of empty cells around the given cell.
 
         Args:
             cell (CellIndex): Index of cell to find neighbors of.
 
         Returns:
-            A list containing the index of every non-obstacle cell adjacent to self one.
+            A list containing the index of every empty cell adjacent to cell.
         """
         neighbors = []
         offsets = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         for offset in offsets:
             neighbor = CellIndex(cell.row + offset[0], cell.col + offset[1])
             if self.is_within_bounds(neighbor):
-                if self._get(neighbor) != Occupancy.OBSTACLE:
+                if self._get(neighbor) == Occupancy.EMPTY:
                     neighbors.append(neighbor)
         return neighbors
 
-    def get_valid_moves(self, agent: Occupancy) -> list[CellIndex]:
+    def get_valid_moves(self, agent: Role) -> list[CellIndex]:
         """
         Provide a list of empty cells around a given agent.
 
         Args:
-            agent (Occupancy): Agent to find the neighbors of.
+            agent (Role): Agent to find the neighbors of.
 
         Returns:
             A list containing the index of every empty cell adjacent to the agent.
@@ -183,9 +166,7 @@ class Environment:
         if agent_cell is None:
             return
 
-        neighbors = self.get_neighbors(agent_cell)
-        empty_spaces = [n for n in neighbors if self._get(n) == Occupancy.EMPTY]
-        return empty_spaces
+        return self.get_neighbors(agent_cell)
 
     def get_shortest_distance(self, cell1: CellIndex, cell2: CellIndex):
         """
@@ -236,13 +217,17 @@ class Environment:
         Returns:
             True if so, False otherwise.
         """
-        pursuant_cell = self.get_agent_cell(self.PURSUANT)
+        offsets = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+        pursuant_cell = self.get_agent_cell(Role.PURSUANT)
         if pursuant_cell is None:
             return
-        for cell in self.get_neighbors(pursuant_cell):
-            if self._get(cell) == self.EVADER:
-                return True
-
+        for offset in offsets:
+            neighbor = CellIndex(
+                pursuant_cell.row + offset[0], pursuant_cell.col + offset[1]
+            )
+            if self.is_within_bounds(neighbor):
+                if self._get(neighbor) == Occupancy.EVADER:
+                    return True
         return False
 
     def _set(self, cell: CellIndex, value: Occupancy):
@@ -263,3 +248,15 @@ class Environment:
             print("Not a valid cell!")
             return None
         return self._graph[cell.row][cell.col]
+
+    def _occupancyToRole(self, agent: Occupancy) -> Role:
+        if agent == Occupancy.PURSUANT:
+            return Role.PURSUANT
+        elif agent == Occupancy.EVADER:
+            return Role.EVADER
+
+    def _roleToOccupancy(self, agent: Role) -> Occupancy:
+        if agent == Role.PURSUANT:
+            return Occupancy.PURSUANT
+        elif agent == Role.EVADER:
+            return Occupancy.EVADER
