@@ -52,7 +52,8 @@ class Node:
     def to_dict(self):
         return {
             "depth": self.depth,
-            "state": self.state,
-            "value": self.value,
-            "role": self.role,
+            "id": self.id,
+            "pursuant state": self.pursuant_state,
+            "evader state": self.evader_state,
+            "role": self.role.name,
         }
