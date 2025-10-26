@@ -76,14 +76,16 @@ class MiniMaxAgent:
             # TODO: From the given empty index and the other agents location, calculate a value to describe the distance.
             pass
 
-    def minimax(self, nodes, depth):
+    def minimax(self, nodes, alpha=-float('inf'), beta=float('inf'), depth):
         """
         Recursive function to output the min/max value.
-        Prune the branch if...
+        Prune the branch if alpha >= beta (or min/max values are equal), since nothing can be updated parent node. 
         
         Args:
-            nodes - possible paths for current timestep
-            depth - 
+            nodes: possible paths for current timestep
+            alpha:
+            beta:
+            depth:  
         """
         val = 0
 
@@ -95,18 +97,24 @@ class MiniMaxAgent:
 
         if self.is_maximizer:
             max_eval = -float('inf')
-            for n_sub in nodes:
-                eval = self.minimax(n_sub, depth-1)       # Input args
-                min_eval = max(eval, min_eval)
+            for children in nodes:
+                max_eval = max(max_eval, self.minimax(self, children, alpha, beta, depth-1))      
                 # Pruning implementation
+                if max_eval >= beta:
+                    break
+                alpha = max(alpha, max_eval)
             return max_eval
         else:
             min_eval = float('inf')
-            for n_sub in nodes:
-                eval = self.minimax(n_sub, depth-1)       # Input args
+            for children in nodes:
+                min_eval = min(min_eval, self.minimax(self, children, alpha, beta, depth-1)) 
                 min_eval = min(eval, max_eval)
                 # Pruning implementation
+                if min_eval <= alpha:
+                    break
+                beta = min(beta, min_eval)
             return min_eval
+               
 
     def _get_next(self, env, self_pos: CellIndex, opp_pos: CellIndex) -> CellIndex:
         """
@@ -120,7 +128,7 @@ class MiniMaxAgent:
         Return:
             CellIndex of next location
         """
-        self.build_tree(env, self_pos, opp_pos)
+        self.build_tree(env, self_pos, turn) # only want environment, position, and whose turn it is.
         best_move = self.minimax(nodes=self.tree_log[-1], depth=self.depth)
 
         # Internally update location
