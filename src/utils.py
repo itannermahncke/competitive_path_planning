@@ -32,6 +32,15 @@ def derive_action(origin: CellIndex, dest: CellIndex):
     """
     Given a starting and ending cell, determine which action caused the operation.
     """
+    operation = Move(
+        dy=dest.row - origin.row,
+        dx=dest.col - origin.col,
+    )
+
+    for a in Action:
+        if operation == a.value:
+            return a
+    return "Not a valid action"
 
 
 class Occupancy(Enum):
@@ -96,7 +105,8 @@ class Node:
         return {
             "id": self.id,
             "depth": self.depth,
+            "role": self.agent_role.name,
             "pursuant state": self.pursuant_state,
             "evader state": self.evader_state,
-            "role": self.agent_role.name,
+            "action taken": self.action_from_parent,
         }

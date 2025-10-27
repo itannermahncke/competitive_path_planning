@@ -5,7 +5,7 @@ import numpy as np
 import random
 import math
 
-from src.utils import Occupancy, Role, CellIndex, Action, role_to_occupancy
+from utils import Occupancy, Role, CellIndex, Action, role_to_occupancy
 
 
 class Environment:
@@ -134,13 +134,13 @@ class Environment:
 
     def get_neighbors(self, cell: CellIndex) -> list[CellIndex]:
         """
-        Provide a list of empty cells around the given cell.
+        Provide a list of non-obstacle cells around the given cell.
 
         Args:
             cell (CellIndex): Index of cell to find neighbors of.
 
         Returns:
-            A list containing the index of every empty cell adjacent to cell.
+            A list containing the index of every non-obstacle cell adjacent to cell.
         """
         neighbors = []
         offsets = [(0, -1), (0, 1), (-1, 0), (1, 0)]
@@ -153,13 +153,13 @@ class Environment:
 
     def get_valid_moves(self, agent: Role) -> list[CellIndex]:
         """
-        Provide a list of empty cells around a given agent.
+        Provide a list of non-obstacle cells around a given agent.
 
         Args:
             agent (Role): Agent to find the neighbors of.
 
         Returns:
-            A list containing the index of every empty cell adjacent to the agent.
+            A list containing the index of every non-obstacle cell adjacent to the agent.
         """
         # setup and find agent
         agent_cell = self.get_agent_cell(agent)
@@ -209,6 +209,22 @@ class Environment:
             Whether or not the cell is within the grid.
         """
         return 0 <= cell.row < self._size and 0 <= cell.col < self._size
+
+    def is_agent_adjacent(self):
+        """
+        Return if the agents are adjacent.
+        """
+        # on top of each other returns true
+        if self.get_agent_cell(Role.PURSUANT) == self.get_agent_cell(Role.EVADER):
+            return True
+
+        # adjacency returns true
+        for n in self.get_valid_moves(Role.PURSUANT):
+            if self._get(n) == Occupancy.EVADER:
+                return True
+
+        # anything else returns false
+        return False
 
     def _set(self, cell: CellIndex, value: Occupancy):
         """

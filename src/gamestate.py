@@ -12,10 +12,10 @@ class GameState:
 
     def __init__(
         self,
-        size=10,
+        size=5,
         density=0.2,
         p_start=CellIndex(0, 0),
-        e_start=CellIndex(9, 9),
+        e_start=CellIndex(4, 4),
     ):
         # Initialize an instance of the minimax algorithm
         self.agents = MiniMax()
@@ -30,7 +30,7 @@ class GameState:
 
         # Updating game attributes
         self.turn_count = 0
-        self.current_turn = Role.EVADER
+        self.current_turn = Role.PURSUANT  # starts with pursuant
         self.current_agent_pos = None
 
         # Other tools
@@ -60,9 +60,9 @@ class GameState:
 
         # Run game if pursuant has not won
         while not self.is_pursuant_win() and not self.is_evader_win():
-            self.switch_turns()
             next_action = self.compute_next_move()
             self.env.move_agent(self.current_turn, next_action)
+            self.switch_turns()
 
         if self.is_pursuant_win():
             print("------ GAME OVER. The evader was captured. ------")
@@ -77,21 +77,22 @@ class GameState:
         """
         self.current_turn = get_adversary(self.current_turn)
         self.current_agent_pos = self.env.get_agent_cell(self.current_turn)
+        self.turn_count += 1
 
     def compute_next_move(self):
         """
         Calls the minimax algorithm to compute best move.
         """
         # build tree of possible actions
-        root_node: Node = self.build_game_tree()
+        root_node: Node = self.build_game_tree(self.current_turn)
 
         # prepare to find the best action
         best_child: Node = None
         best_distance = None
         if self.current_turn == Role.EVADER:
-            best_distance = float("inf")
-        else:
             best_distance = -float("inf")
+        else:
+            best_distance = float("inf")
 
         # call the minimax algorithm on each child to find the best choice
         for n in root_node.children:
@@ -215,9 +216,7 @@ class GameState:
         Returns:
             True if so, False otherwise.
         """
-        return self.env.get_agent_cell(Role.PURSUANT) == self.env.get_agent_cell(
-            Role.EVADER
-        )
+        return self.env.is_agent_adjacent()
 
     def is_evader_win(self):
         """
