@@ -56,7 +56,7 @@ def get_adversary(agent: Role) -> Role:
         return Role.PURSUANT
 
 
-def occupancy_to_role(self, agent: Occupancy) -> Role:
+def occupancy_to_role(agent: Occupancy) -> Role:
     """
     Convert Occupancy representing an agent into a Role.
     """
@@ -67,7 +67,7 @@ def occupancy_to_role(self, agent: Occupancy) -> Role:
     return None
 
 
-def role_to_occupancy(self, agent: Role) -> Occupancy:
+def role_to_occupancy(agent: Role) -> Occupancy:
     """
     Convert Role to Occupancy representing an agent.
     """

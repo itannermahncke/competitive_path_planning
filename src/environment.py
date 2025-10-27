@@ -147,7 +147,7 @@ class Environment:
         for offset in offsets:
             neighbor = CellIndex(cell.row + offset[0], cell.col + offset[1])
             if self.is_within_bounds(neighbor):
-                if self._get(neighbor) == Occupancy.EMPTY:
+                if self._get(neighbor) != Occupancy.OBSTACLE:
                     neighbors.append(neighbor)
         return neighbors
 
@@ -209,26 +209,6 @@ class Environment:
             Whether or not the cell is within the grid.
         """
         return 0 <= cell.row < self._size and 0 <= cell.col < self._size
-
-    def is_pursuant_win(self):
-        """
-        Check and return if the pursuant is adjacent to the evader.
-
-        Returns:
-            True if so, False otherwise.
-        """
-        offsets = [(0, -1), (0, 1), (-1, 0), (1, 0)]
-        pursuant_cell = self.get_agent_cell(Role.PURSUANT)
-        if pursuant_cell is None:
-            return
-        for offset in offsets:
-            neighbor = CellIndex(
-                pursuant_cell.row + offset[0], pursuant_cell.col + offset[1]
-            )
-            if self.is_within_bounds(neighbor):
-                if self._get(neighbor) == Occupancy.EVADER:
-                    return True
-        return False
 
     def _set(self, cell: CellIndex, value: Occupancy):
         """
