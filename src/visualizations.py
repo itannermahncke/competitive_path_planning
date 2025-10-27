@@ -6,49 +6,93 @@ import numpy as np
 import random
 from sklearn import tree
 
-from utils import Occupancy
+from graphviz import Digraph
+
+from utils import Occupancy, Node, Role
 
 
-def gamestate_visual(graph, size, filename="../images/graph"):
+def gamestate_visual(graph, size, n):
     """
     Show plot of environment containing obstacles, pursuer, evader.
-    
+
     Args:
         graph: an np array with initalized obstacles and agents
         size: the size n by n graph
-    """   
+        n: image id
+        filename: path to file
+    """
     # Convert Enums to integers if needed
     if graph.dtype == object:
-        graph = np.vectorize(lambda x: x.value if isinstance(x, Occupancy) else x)(graph)
+        graph = np.vectorize(lambda x: x.value if isinstance(x, Occupancy) else x)(
+            graph
+        )
 
-
-    cmap = colors.ListedColormap([
-        'white',    # Occupancy.EMPTY
-        'black',    # Occupancy.OBSTACLE
-        'green',    # Occupancy.PURSUANT
-        'red',      # Occupancy.EVADER
-        ])
-    bounds = [0,1,2,3,4]
+    cmap = colors.ListedColormap(
+        [
+            "white",  # Occupancy.EMPTY
+            "black",  # Occupancy.OBSTACLE
+            "green",  # Occupancy.PURSUANT
+            "red",  # Occupancy.EVADER
+        ]
+    )
+    bounds = [0, 1, 2, 3, 4]
     norm = colors.BoundaryNorm(bounds, cmap.N)
 
     fig, ax = plt.subplots()
     ax.imshow(graph, cmap=cmap, norm=norm)
 
     # Draw gridlines
-    ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=0.1)
-    
+    ax.grid(which="major", axis="both", linestyle="-", color="k", linewidth=0.1)
+
     # Make sure each cell center is 0.5 above value
     ax.set_xticks(np.arange(0.5, size, 1))
     ax.set_yticks(np.arange(0.5, size, 1))
 
     # Hide tick values
-    plt.tick_params(axis='both', which='both', bottom=False,   
-                    left=False, labelbottom=False, labelleft=False) 
-    
+    plt.tick_params(
+        axis="both",
+        which="both",
+        bottom=False,
+        left=False,
+        labelbottom=False,
+        labelleft=False,
+    )
+    plt.savefig(f"images/graph_state_{n}")
     plt.show()
 
-def minimax():
-    """Show graph tree of decisions populated with values."""
-    pass
 
+def visualize_game_tree(root: Node, n):
+    """
+    Visualize the game tree using Graphviz, labeling each node with its distance.
+    """
+    dot = Digraph(comment="Game Tree")
+    dot.attr(rankdir="TB")  # top to bottom layout
 
+    def add_node(node: Node):
+        if node is None:
+            return
+
+        # label: just the distance value
+        node_label = f"{node.distance}"
+        if node.agent_role == Role.PURSUANT:
+            node_color = "red"
+        else:
+            node_color = "green"
+
+        # add node to graph with unique identifier
+        dot.node(str(node.id), node_label, color=node_color)
+
+        # add children edges
+        if node.children:
+            for child in node.children:
+                if child is not None:
+                    # Recursively build subtree
+                    add_node(child)
+                    dot.edge(str(node.id), str(child.id))
+
+    # Build from root
+    add_node(root)
+
+    # Save and render
+    dot.render(f"images/game_tree_{0}", format="png", cleanup=True)
+    return dot

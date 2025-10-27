@@ -44,10 +44,10 @@ def derive_action(origin: CellIndex, dest: CellIndex):
 
 
 class Occupancy(Enum):
-    EMPTY = -1
-    EVADER = 0  # falsy
-    PURSUANT = 1  # truthy
-    OBSTACLE = 2
+    EMPTY = 0
+    EVADER = 2
+    PURSUANT = 3
+    OBSTACLE = 1
 
 
 class Role(Enum):

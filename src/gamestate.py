@@ -3,6 +3,7 @@
 from environment import Environment
 from minimax import MiniMax
 from utils import CellIndex, Role, Node, get_adversary, derive_action
+from visualizations import visualize_game_tree
 
 
 class GameState:
@@ -34,7 +35,7 @@ class GameState:
         self.current_agent_pos = None
 
         # Other tools
-        self.EVADER_THRESHOLD = 50
+        self.EVADER_THRESHOLD = 25
         self.LOOKAHEAD_DEPTH = 3
         self.SMALLEST_DISTANCE = 0
         self.GREATEST_DISTANCE = self.env.size**2
@@ -83,25 +84,29 @@ class GameState:
         """
         Calls the minimax algorithm to compute best move.
         """
+        print(f"T{self.turn_count}) Agent {self.current_turn}\n")
         # build tree of possible actions
         root_node: Node = self.build_game_tree(self.current_turn)
+        visualize_game_tree(root_node, self.current_turn)
 
         # prepare to find the best action
         best_child: Node = None
         best_distance = None
         if self.current_turn == Role.EVADER:
-            best_distance = -float("inf")
+            best_distance = self.SMALLEST_DISTANCE
         else:
-            best_distance = float("inf")
+            best_distance = self.GREATEST_DISTANCE
 
         # call the minimax algorithm on each child to find the best choice
         for n in root_node.children:
+            # calculate and report the heuristic value
             distance = self.agents.minimax(
                 node=n,
                 depth=self.LOOKAHEAD_DEPTH,
                 alpha=self.SMALLEST_DISTANCE,
                 beta=self.GREATEST_DISTANCE,
             )
+            print(f"-> child {n.action_from_parent} has value {distance}")
             if (distance > best_distance and self.current_turn == Role.EVADER) or (
                 distance < best_distance and self.current_turn == Role.PURSUANT
             ):
@@ -109,6 +114,7 @@ class GameState:
                 best_distance = distance
 
         # return the action required to move from the root state to the best possible next state
+        print(f"-> chose {best_child.action_from_parent}\n")
         return best_child.action_from_parent
 
     def build_game_tree(self, initial_state: Role) -> Node:

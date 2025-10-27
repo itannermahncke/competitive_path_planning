@@ -27,8 +27,8 @@ class MiniMax:
         Prune the branch if alpha >= beta (or min/max values are equal), since no better option will be available through this route.
 
         Args:
-            tree: a single node in the game tree representing a game state
-            depth: levels in the tree; AKA look-ahead depth
+            node: a single node in the game tree representing a game state
+            depth: current level in the tree, beginning with look-ahead depth
             alpha: "worst-case scenario" value for maximizer, continually increases
             beta: "worst-case scenario" value for minimizer, continually decreases
         """
