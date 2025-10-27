@@ -9,31 +9,90 @@ import numpy as np
 
 
 def density_sweep(n, density_vals):
-    """"""
+    """
+    Parameter sweep of obstacle density in environment formation.
+    
+    Args:
+        n (int): episodes of game
+        density_vals (list of ints): parameter values to be tested
+
+    Returns:
+        List of lists representing winners per game episode for every parameter value. 
+    """
     density_results = []
-    for d in density_vals:
-        print(f"CURRENT DESNTIY IS: {d}")
+    for val in density_vals:
+        print(f"CURRENT DENSTIY IS: {val}")
         result = []
-        for _ in range(n):
-            game = GameState(density=d)
-            r = game.run_loop()
-            print(f"WINNER IS {r}")
-            result.append(r)
+        for trial in range(n):
+            game = GameState(episode=trial, depth=val)
+            winner = game.run_loop() 
+            print(f"WINNER IS {winner}")
+            result.append(winner)
         density_results.append(result)
 
     return density_results
 
 
-def map_size_sweep():
-    pass
+def map_size_sweep(n, size_vals):
+    """
+    Parameter sweep of map size in environment formation.
+    
+    Args:
+        n (int): episodes of game
+        size_vals (list of ints): parameter values to be tested
+
+    Returns:
+        List of lists representing winners per game episode for every parameter value. 
+    """
+    size_results = []
+    for val in size_vals:
+        print(f"CURRENT DENSTIY IS: {val}")
+        result = []
+        for trial in range(n):
+            game = GameState(episode=trial, size=val)
+            winner = game.run_loop() 
+            print(f"WINNER IS {winner}")
+            result.append(winner)
+        size_results.append(result)
+
+    return size_results
+
+def depth_sweep(n, depth_vals):
+    """
+    Parameter sweep of look-ahead depth in AB Pruning.
+    
+    Args:
+        n (int): episodes of game
+        depth_vals (list of ints): parameter values to be tested
+
+    Returns:
+        List of lists representing winners per game episode for every parameter value. 
+    """
+    depth_results = []
+    for val in depth_vals:
+        print(f"CURRENT DEPTH IS: {val}")
+        result = []
+        for trial in range(n):
+            game = GameState(episode=trial, depth=val)
+            winner = game.run_loop() 
+            print(f"WINNER IS {winner}")
+            result.append(winner)   
+        depth_results.append(result)  
+    
+    return depth_results
 
 
-def depth_sweep():
-    pass
+def create_bar_chart(n, parameter):
+    """
+    Create a bar chart visualizing a given parameter sweep for a certain number of trials for each parameter value.
 
+    Args:
+        n (int): episodes of game
+        parameter (str): parameter to be tested
 
-if __name__ == "__main__":
-
+    Returns:
+        A bar chart. 
+    """
     # Number of games run per density
     n = 100
 
@@ -42,17 +101,19 @@ if __name__ == "__main__":
     evader_win_rate = []
     tie_rate = []
 
-    # Density sweep values
-    density_vals = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    parameter_vals = []
+    # Parameter sweep values
+    if parameter == "Obstacle Density":
+        vals = range(0,1,0.1)
+    elif parameter == "Map Size":
+        vals = range(5, 100)
+    elif parameter == "Look-Ahead Depth":
+        vals = range(1,25)
 
-    density_results = density_sweep(n, density_vals)
-    # print("THE DENSITY RESULTS ARE:")
-    # print(density_results)
-
-    for d in density_results:
-        pursuer_win_rate.append(d.count(Role.PURSUANT))
-        evader_win_rate.append(d.count(Role.EVADER))
-        tie_rate.append(d.count(None))
+    for val in parameter_vals:
+        pursuer_win_rate.append(val.count(Role.PURSUANT))
+        evader_win_rate.append(val.count(Role.EVADER))
+        tie_rate.append(val.count(None))
 
 
     # Convert counts to proportions
@@ -64,7 +125,7 @@ if __name__ == "__main__":
     # Add spacing between bars
     bar_width = 0.25
     bar_spacing = 0.1
-    x_positions = np.arange(len(density_vals)) * (bar_width + bar_spacing)
+    x_positions = np.arange(len(parameter_vals)) * (bar_width + bar_spacing)
 
     # Plot stacked bars
     plt.figure(figsize=(8, 5))
@@ -73,13 +134,16 @@ if __name__ == "__main__":
     plt.bar(x_positions, tie_rate, bar_width, bottom=pursuer_rate + evader_rate, color='k', label='Tie')
 
     # Axis labels and formatting
-    plt.xticks(x_positions, [str(d) for d in density_vals])
-    plt.xlabel("Obstacle Density")
+    plt.xticks(x_positions, [str(d) for d in parameter_vals])
+    plt.xlabel(parameter)
     plt.ylabel("Proportion of Outcomes")
-    plt.title("Stacked Win Rate Distribution by Density")
+    plt.title(f"Stacked Win Rate Distribution by {parameter}")
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+
+if __name__ == "__main__":
 
         
     # Heat map
