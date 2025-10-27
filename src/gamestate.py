@@ -33,9 +33,11 @@ class GameState:
         self.current_turn = Role.EVADER
         self.current_agent_pos = None
 
-        # Tree-building tools
+        # Other tools
         self.EVADER_THRESHOLD = 50
         self.LOOKAHEAD_DEPTH = 3
+        self.SMALLEST_DISTANCE = 0
+        self.GREATEST_DISTANCE = self.env.size**2
         self.node_id_counter = 0
 
     def run_loop(self) -> Role:
@@ -94,8 +96,10 @@ class GameState:
         # call the minimax algorithm on each child to find the best choice
         for n in root_node.children:
             distance = self.agents.minimax(
-                n,
-                self.LOOKAHEAD_DEPTH,
+                node=n,
+                depth=self.LOOKAHEAD_DEPTH,
+                alpha=self.SMALLEST_DISTANCE,
+                beta=self.GREATEST_DISTANCE,
             )
             if (distance > best_distance and self.current_turn == Role.EVADER) or (
                 distance < best_distance and self.current_turn == Role.PURSUANT
@@ -206,12 +210,14 @@ class GameState:
 
     def is_pursuant_win(self):
         """
-        Check and return if the pursuant is adjacent to the evader.
+        Check and return if the pursuant has captured the evader.
 
         Returns:
             True if so, False otherwise.
         """
-        return self.env.is_pursuant_win()
+        return self.env.get_agent_cell(Role.PURSUANT) == self.env.get_agent_cell(
+            Role.EVADER
+        )
 
     def is_evader_win(self):
         """
