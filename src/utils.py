@@ -40,7 +40,7 @@ def derive_action(origin: CellIndex, dest: CellIndex):
     for a in Action:
         if operation == a.value:
             return a
-    return "Not a valid action"
+    return None
 
 
 class Occupancy(Enum):

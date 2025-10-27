@@ -1,3 +1,7 @@
+"""
+Test public functions belonging to the Environment class.
+"""
+
 import pytest
 import math
 from src.environment import Environment
