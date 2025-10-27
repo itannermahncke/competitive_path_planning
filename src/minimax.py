@@ -2,6 +2,7 @@
 Decide actions for pursuer and evader.
 """
 
+from environment import Environment
 from utils import Role, Node
 
 
@@ -33,7 +34,9 @@ class MiniMax:
             beta: "worst-case scenario" value for minimizer, continually decreases
         """
         # Exit on base case: return heuristic value of node
-        if depth == 0:
+        # print(depth)
+        if depth == 1 or node.distance == 1:
+            # print(node.distance)
             return node.distance
 
         # Evader
@@ -42,13 +45,14 @@ class MiniMax:
             for child in node.children:
                 max_eval = max(
                     max_eval,
-                    self.minimax(
+                    ret := self.minimax(
                         child,
                         depth - 1,
                         alpha,
                         beta,
                     ),
                 )
+                # print(f"Evader: {ret}")
                 # Pruning implementation
                 if max_eval >= beta:
                     break
@@ -61,15 +65,26 @@ class MiniMax:
             for child in node.children:
                 min_eval = min(
                     min_eval,
-                    self.minimax(
+                    ret := self.minimax(
                         child,
                         depth - 1,
                         alpha,
                         beta,
                     ),
                 )
+                # print(f"Pursuant: {ret}")
                 # Pruning implementation
                 if min_eval <= alpha:
                     break
                 beta = min(beta, min_eval)
             return min_eval
+
+    def evaluate_heuristic(node: Node, env: Environment):
+        """
+        Given a node containing agent states and the world those agents are in, return the distance between those states; essentially, evaluate the heuristic value of the given node.
+
+        Args:
+            node (Node): the game state to evaluate
+            env (Environment): the obstacle-filled world
+        """
+        return env.get_shortest_distance(node.pursuant_state, node.evader_state)

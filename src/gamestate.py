@@ -15,6 +15,7 @@ class GameState:
         self,
         size=5,
         density=0.2,
+        depth=3,
         p_start=CellIndex(0, 0),
         e_start=CellIndex(4, 4),
     ):
@@ -36,7 +37,7 @@ class GameState:
 
         # Other tools
         self.EVADER_THRESHOLD = 25
-        self.LOOKAHEAD_DEPTH = 3
+        self.LOOKAHEAD_DEPTH = depth
         self.SMALLEST_DISTANCE = 0
         self.GREATEST_DISTANCE = self.env.size**2
         self.node_id_counter = 0
@@ -49,6 +50,7 @@ class GameState:
             The winner of the game, or None if the game was impossible.
         """
         print("----------STARTING GAME.-------------")
+        # end immediately if field is intraversible
         if (
             self.env.get_shortest_distance(
                 self.env.get_agent_cell(Role.PURSUANT),
@@ -59,29 +61,33 @@ class GameState:
             print("------ GAME OVER. The field was intraversible. ------")
             return None
 
-        # Run game if pursuant has not won
-        img_counter = 0
+        # Run game if no one has won
         while not self.is_pursuant_win() and not self.is_evader_win():
-            # Produce images
-            gamestate_visual(self.env._graph, self.env.size, img_counter)
             next_action = self.compute_next_move()
             self.env.move_agent(self.current_turn, next_action)
             self.switch_turns()
-            img_counter+=1
-            
+
         if self.is_pursuant_win():
             print("------ GAME OVER. The evader was captured. ------")
+            gamestate_gif()
             return Role.PURSUANT
         else:
             print("------ GAME OVER. The evader escaped. ------")
+            gamestate_gif()
             return Role.EVADER
 
     def switch_turns(self):
         """
         Hand over state variables to the opponent.
         """
+        # first, take a snapshot of the game field
+        gamestate_visual(self.env._graph, self.env.size, self.turn_count)
+
+        # hand over turn and pos to adversary
         self.current_turn = get_adversary(self.current_turn)
         self.current_agent_pos = self.env.get_agent_cell(self.current_turn)
+
+        # iterate
         self.turn_count += 1
 
     def compute_next_move(self):
@@ -91,7 +97,6 @@ class GameState:
         print(f"T{self.turn_count}) Agent {self.current_turn}\n")
         # build tree of possible actions
         root_node: Node = self.build_game_tree(self.current_turn)
-        # visualize_game_tree(root_node, self.current_turn)
 
         # prepare to find the best action
         best_child: Node = None

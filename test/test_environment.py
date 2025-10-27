@@ -288,7 +288,55 @@ def test_get_shortest_distance_blocked(empty_env: Environment):
 
 
 # --- Unit tests for analyzing game state ---
-# is_within_bounds(), is_pursuant_win()
+
+
+def test_vertical_adjacency():
+    """
+    Test that is_agent_adjacent() detects adjacency in the vertical direction.
+    """
+    env1 = Environment(
+        size=5,
+        density=0.0,
+        pursuant_pos=CellIndex(2, 3),
+        evader_pos=CellIndex(3, 3),
+    )
+    assert env1.is_agent_adjacent()
+
+    env2 = Environment(
+        size=5,
+        density=0.0,
+        pursuant_pos=CellIndex(3, 3),
+        evader_pos=CellIndex(2, 3),
+    )
+    assert env2.is_agent_adjacent()
+
+
+def test_pursuant_win_horizontal():
+    """
+    Test that is_pursuant_win() detects adjacency in the horizontal direction.
+    """
+    env1 = Environment(
+        size=5,
+        density=0.0,
+        pursuant_pos=CellIndex(3, 2),
+        evader_pos=CellIndex(3, 3),
+    )
+    assert env1.is_agent_adjacent()
+
+    env2 = Environment(
+        size=5,
+        density=0.0,
+        pursuant_pos=CellIndex(3, 3),
+        evader_pos=CellIndex(3, 2),
+    )
+    assert env2.is_agent_adjacent()
+
+
+def test_not_pursuant_win(empty_env: Environment):
+    """
+    Test that is_pursuant_win() detects adjacency correctly.
+    """
+    assert not empty_env.is_agent_adjacent()
 
 
 def test_within_bounds(empty_env: Environment):

@@ -60,37 +60,43 @@ def gamestate_visual(graph, size, n):
         labelbottom=False,
         labelleft=False,
     )
-    plt.savefig(f"../images/graph_state_{n}")
-    plt.show()
+    plt.savefig(f"images/graph_state_{n}")
 
 
-def gamestate_gif(img_folder="../images/", output_gif_path="../gamestate_gifs/gamestate1.gif", duration=100, loop=0):
-        """
-        Creates an animated GIF from a folder of images.
+def gamestate_gif(
+    img_folder="images/",
+    output_gif_path="images/gamestate_gifs/gamestate1.gif",
+    duration=500,
+    loop=0,
+):
+    """
+    Creates an animated GIF from a folder of images.
 
-        Args:
-            image_folder (str): Path to the folder containing the images.
-            output_gif_path (str): Path and filename for the output GIF.
-            duration (int): Duration of each frame in milliseconds.
-            loop (int): Number of times the GIF should loop (0 for infinite loop).
-        """
-        image_files = sorted(glob.glob(f"{img_folder}/*.png"))  # Adjust extension as needed (e.g., *.jpg)
-        if not image_files:
-            print(f"No image files found in {img_folder}")
-            return
+    Args:
+        image_folder (str): Path to the folder containing the images.
+        output_gif_path (str): Path and filename for the output GIF.
+        duration (int): Duration of each frame in milliseconds.
+        loop (int): Number of times the GIF should loop (0 for infinite loop).
+    """
+    image_files = sorted(
+        glob.glob(f"{img_folder}/*.png")
+    )  # Adjust extension as needed (e.g., *.jpg)
+    if not image_files:
+        print(f"No image files found in {img_folder}")
+        return
 
-        images = [Image.open(file) for file in image_files]
+    images = [Image.open(file) for file in image_files]
 
-        # Save the first image, appending subsequent images to create the GIF
-        images[0].save(
-            output_gif_path,
-            save_all=True,
-            append_images=images[1:],
-            duration=duration,
-            loop=loop,
-            optimize=False
-        )
-        print(f"GIF successfully created at: {output_gif_path}")
+    # Save the first image, appending subsequent images to create the GIF
+    images[0].save(
+        output_gif_path,
+        save_all=True,
+        append_images=images[1:],
+        duration=duration,
+        loop=loop,
+        optimize=False,
+    )
+    print(f"GIF successfully created at: {output_gif_path}")
 
 
 def visualize_game_tree(root: Node, n):
