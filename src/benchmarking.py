@@ -46,8 +46,8 @@ if __name__ == "__main__":
     density_vals = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
     density_results = density_sweep(n, density_vals)
-    print("THE DENSITY RESULTS ARE:")
-    print(density_results)
+    # print("THE DENSITY RESULTS ARE:")
+    # print(density_results)
 
     for d in density_results:
         pursuer_win_rate.append(d.count(Role.PURSUANT))

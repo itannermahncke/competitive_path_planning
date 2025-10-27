@@ -3,7 +3,7 @@
 from environment import Environment
 from minimax import MiniMax
 from utils import CellIndex, Role, Node, get_adversary, derive_action
-from visualizations import visualize_game_tree
+from visualizations import visualize_game_tree, gamestate_gif, gamestate_visual
 
 
 class GameState:
@@ -60,11 +60,15 @@ class GameState:
             return None
 
         # Run game if pursuant has not won
+        img_counter = 0
         while not self.is_pursuant_win() and not self.is_evader_win():
+            # Produce images
+            gamestate_visual(self.env._graph, self.env.size, img_counter)
             next_action = self.compute_next_move()
             self.env.move_agent(self.current_turn, next_action)
             self.switch_turns()
-
+            img_counter+=1
+            
         if self.is_pursuant_win():
             print("------ GAME OVER. The evader was captured. ------")
             return Role.PURSUANT
@@ -87,7 +91,7 @@ class GameState:
         print(f"T{self.turn_count}) Agent {self.current_turn}\n")
         # build tree of possible actions
         root_node: Node = self.build_game_tree(self.current_turn)
-        visualize_game_tree(root_node, self.current_turn)
+        # visualize_game_tree(root_node, self.current_turn)
 
         # prepare to find the best action
         best_child: Node = None
