@@ -1,12 +1,14 @@
 """Main"""
 
 from environment import Environment
-from minimax import MiniMaxAgent
-from utils import Occupancy, CellIndex, Role
+from minimax import MiniMax
+from utils import CellIndex, Role, Node, get_adversary, derive_action
 
 
 class GameState:
-    """main"""
+    """
+    Track the game tree and call minimax algorithm to optimally direct agents in the environment.
+    """
 
     def __init__(
         self,
@@ -15,72 +17,207 @@ class GameState:
         p_start=CellIndex(0, 0),
         e_start=CellIndex(9, 9),
     ):
+        # Initialize an instance of the minimax algorithm
+        self.agents = MiniMax()
 
-        # Initialize robotic agents
-        p = Occupancy.PURSUANT
-        e = Occupancy.EVADER
-
-        # Initialize an agent of the minimax algorithm
-        self.agent = MiniMaxAgent()
-
-        self.env = Environment(size, density, p_start, e_start, p, e)
-
-        self.is_maximizer_turn: Role = Role.MAXIMIZER  # True
-
-        self.move: CellIndex = None
-        self.pos: CellIndex = None
-
-    def run_loop(self):
-        """
-        Constant run loop of alternating game moves.
-        """
-        print("----------STARTING GAME.-------------")
-
-        # Run game if pursuant has not won
-        while not self.env.is_pursuant_win():
-            self.next_move()
-            self.update_gamestate()
-
-        # TODO: add in logic for evader, game tie
-
-        print("------ GAME OVER. The evader was captured. ------")
-
-    def next_move(self):
-        """
-        Calls the minimax alg to compute next best move.
-        """
-
-        # Alternating turns
-        if self.is_maximizer_turn == False:
-            self.is_maximizer_turn = Role.MAXIMIZER
-            # Get current position of evader agent
-            self.pos = self.env.get_agent_cell(Occupancy.EVADER)
-        else:
-            self.is_maximizer_turn = Role.MINIMIZER  # Pursuer goes first
-            # Get current position of pursuant agent
-            self.pos = self.env.get_agent_cell(Occupancy.PURSUANT)
-
-        # Compute agent's next move from current positions
-        self.move = self.agent._get_next(
-            self.env,
-            self.pos,
-            self.is_maximizer_turn,
+        # Initialize a field to play on
+        self.env = Environment(
+            size,
+            density,
+            p_start,
+            e_start,
         )
 
-    def occupancyToRole(agent: Occupancy) -> Role:
-        if agent == Occupancy.EVADER:
-            return Role.MAXIMIZER
-        elif agent == Occupancy.PURSUANT:
-            return Role.MINIMIZER
+        # Updating game attributes
+        self.turn_count = 0
+        self.current_turn = Role.EVADER
+        self.current_agent_pos = None
 
-    def roleToOccupancy(agent: Role) -> Occupancy:
-        if agent == Role.MINIMIZER:
-            return Occupancy.PURSUANT
-        elif agent == Role.MAXIMIZER:
-            return Occupancy.EVADER
+        # Tree-building tools
+        self.EVADER_THRESHOLD = 50
+        self.LOOKAHEAD_DEPTH = 3
+        self.node_id_counter = 0
 
-    def update_gamestate(self):
-        """Move agent's location in the environment"""
+    def run_loop(self) -> Role:
+        """
+        Run the game.
 
-        print("---------- MOVING AGENT ----------")
-        self.env.move_agent(self.pos, self.move)
+        Returns:
+            The winner of the game, or None if the game was impossible.
+        """
+        print("----------STARTING GAME.-------------")
+        if (
+            self.env.get_shortest_distance(
+                self.env.get_agent_cell(Role.PURSUANT),
+                self.env.get_agent_cell(Role.EVADER),
+            )
+            is None
+        ):
+            print("------ GAME OVER. The field was intraversible. ------")
+            return None
+
+        # Run game if pursuant has not won
+        while not self.is_pursuant_win() and not self.is_evader_win():
+            self.switch_turns()
+            next_action = self.compute_next_move()
+            self.env.move_agent(self.current_turn, next_action)
+
+        if self.is_pursuant_win():
+            print("------ GAME OVER. The evader was captured. ------")
+            return Role.PURSUANT
+        else:
+            print("------ GAME OVER. The evader escaped. ------")
+            return Role.EVADER
+
+    def switch_turns(self):
+        """
+        Hand over state variables to the opponent.
+        """
+        self.current_turn = get_adversary(self.current_turn)
+        self.current_agent_pos = self.env.get_agent_cell(self.current_turn)
+
+    def compute_next_move(self):
+        """
+        Calls the minimax algorithm to compute best move.
+        """
+        # build tree of possible actions
+        root_node: Node = self.build_game_tree()
+
+        # prepare to find the best action
+        best_child: Node = None
+        best_distance = None
+        if self.current_turn == Role.EVADER:
+            best_distance = float("inf")
+        else:
+            best_distance = -float("inf")
+
+        # call the minimax algorithm on each child to find the best choice
+        for n in root_node.children:
+            distance = self.agents.minimax(
+                n,
+                self.LOOKAHEAD_DEPTH,
+            )
+            if (distance > best_distance and self.current_turn == Role.EVADER) or (
+                distance < best_distance and self.current_turn == Role.PURSUANT
+            ):
+                best_child = n
+                best_distance = distance
+
+        # return the action required to move from the root state to the best possible next state
+        return best_child.action_from_parent
+
+    def build_game_tree(self, initial_state: Role) -> Node:
+        """
+        Calculate all possible game states until the look-ahead depth is reached.
+
+        Args:
+            initial_state (Role): indicates who's turn it is at the root node
+
+        Returns:
+            The root node of the game tree, from which the rest of the tree can be accessed.
+        """
+        # reset node counter
+        self.node_id_counter = 0
+        # build the root node
+        p_pos = self.env.get_agent_cell(Role.PURSUANT)
+        e_pos = self.env.get_agent_cell(Role.EVADER)
+        root = Node(
+            id=self.node_id(),
+            depth=0,
+            agent_role=initial_state,
+            pursuant_state=p_pos,
+            evader_state=e_pos,
+            distance=self.env.get_shortest_distance(
+                p_pos,
+                e_pos,
+            ),
+            action_from_parent=None,
+            parent=None,
+            children=[],
+        )
+
+        # expand children recursively
+        self.construct_node_children(root)
+
+        # return root
+        return root
+
+    def construct_node_children(self, parent: Node):
+        """
+        Recursively construct each node's child in an expansion of the game tree.
+
+        Args:
+            node (Node): the node to expand
+        """
+        # break if at depth
+        if parent.depth >= self.LOOKAHEAD_DEPTH:
+            return
+
+        # find all children of this game state given agent
+        if parent.agent_role == Role.PURSUANT:
+            children = self.env.get_neighbors(parent.pursuant_state)
+        else:
+            children = self.env.get_neighbors(parent.evader_state)
+
+        # construct the children
+        for neighbor_cell in children:
+            # locate agents in new state and figure out what happened
+            p_pos = None
+            e_pos = None
+            action_taken = None
+            if parent.agent_role == Role.PURSUANT:
+                p_pos = neighbor_cell
+                e_pos = parent.evader_state
+                action_taken = derive_action(
+                    parent.pursuant_state,
+                    neighbor_cell,
+                )
+            else:
+                p_pos = parent.pursuant_state
+                e_pos = neighbor_cell
+                action_taken = derive_action(
+                    parent.evader_state,
+                    neighbor_cell,
+                )
+
+            # construct the child
+            child_node = Node(
+                id=self.node_id(),
+                depth=parent.depth + 1,
+                agent_role=get_adversary(parent.agent_role),
+                pursuant_state=p_pos,
+                evader_state=e_pos,
+                distance=self.env.get_shortest_distance(
+                    p_pos,
+                    e_pos,
+                ),
+                action_from_parent=action_taken,
+                parent=parent,
+                children=[],
+            )
+
+            # attach and expand the child
+            parent.children.append(child_node)
+            self.construct_node_children(child_node)
+
+    def node_id(self):
+        self.node_id_counter += 1
+        return self.node_id_counter
+
+    def is_pursuant_win(self):
+        """
+        Check and return if the pursuant is adjacent to the evader.
+
+        Returns:
+            True if so, False otherwise.
+        """
+        return self.env.is_pursuant_win()
+
+    def is_evader_win(self):
+        """
+        Check and return if the evader has suffiently survived.
+
+        Returns:
+            True if so, False otherwise.
+        """
+        return self.turn_count >= self.EVADER_THRESHOLD
