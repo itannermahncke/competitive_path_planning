@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,12 @@ class Action(Enum):
     RIGHT = Move(0, 1)
 
 
+def derive_action(origin: CellIndex, dest: CellIndex):
+    """
+    Given a starting and ending cell, determine which action caused the operation.
+    """
+
+
 class Occupancy(Enum):
     EMPTY = -1
     EVADER = 0  # falsy
@@ -37,6 +44,37 @@ class Occupancy(Enum):
 class Role(Enum):
     PURSUANT = False
     EVADER = True
+
+
+def get_adversary(agent: Role) -> Role:
+    """
+    Given an agent, return its opponent.
+    """
+    if agent == Role.PURSUANT:
+        return Role.EVADER
+    elif agent == Role.EVADER:
+        return Role.PURSUANT
+
+
+def occupancy_to_role(self, agent: Occupancy) -> Role:
+    """
+    Convert Occupancy representing an agent into a Role.
+    """
+    if agent == Occupancy.PURSUANT:
+        return Role.PURSUANT
+    elif agent == Occupancy.EVADER:
+        return Role.EVADER
+    return None
+
+
+def role_to_occupancy(self, agent: Role) -> Occupancy:
+    """
+    Convert Role to Occupancy representing an agent.
+    """
+    if agent == Role.PURSUANT:
+        return Occupancy.PURSUANT
+    elif agent == Role.EVADER:
+        return Occupancy.EVADER
 
 
 @dataclass

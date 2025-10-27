@@ -5,7 +5,7 @@ import numpy as np
 import random
 import math
 
-from src.utils import Occupancy, Role, CellIndex, Action
+from src.utils import Occupancy, Role, CellIndex, Action, role_to_occupancy
 
 
 class Environment:
@@ -98,7 +98,7 @@ class Environment:
 
         # move the agent
         self._set(cur_pos, Occupancy.EMPTY)
-        self._set(new_pos, self._roleToOccupancy(agent))
+        self._set(new_pos, role_to_occupancy(agent))
         return True
 
     def get_agent_cell(self, agent: Role) -> CellIndex:
@@ -111,7 +111,7 @@ class Environment:
         Returns:
             The index of the cell where the agent is located.
         """
-        agent = self._roleToOccupancy(agent)
+        agent = role_to_occupancy(agent)
         for i, r in enumerate(self._graph):
             if agent in r:
                 return CellIndex(i, np.where(r == agent)[0])
@@ -248,15 +248,3 @@ class Environment:
             print("Not a valid cell!")
             return None
         return self._graph[cell.row][cell.col]
-
-    def _occupancyToRole(self, agent: Occupancy) -> Role:
-        if agent == Occupancy.PURSUANT:
-            return Role.PURSUANT
-        elif agent == Occupancy.EVADER:
-            return Role.EVADER
-
-    def _roleToOccupancy(self, agent: Role) -> Occupancy:
-        if agent == Role.PURSUANT:
-            return Occupancy.PURSUANT
-        elif agent == Role.EVADER:
-            return Occupancy.EVADER
