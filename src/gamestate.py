@@ -3,7 +3,7 @@
 from environment import Environment
 from minimax import MiniMax
 from utils import CellIndex, Role, Node, get_adversary, derive_action
-from visualizations import visualize_game_tree, gamestate_gif, gamestate_visual
+from visualizations import gamestate_gif
 
 
 class GameState:
@@ -13,6 +13,7 @@ class GameState:
 
     def __init__(
         self,
+        episode,
         size=5,
         density=0.2,
         depth=3,
@@ -31,9 +32,11 @@ class GameState:
         )
 
         # Updating game attributes
+        self.episode = episode
         self.turn_count = 0
         self.current_turn = Role.PURSUANT  # starts with pursuant
         self.current_agent_pos = None
+        self.game_history = []
 
         # Other tools
         self.EVADER_THRESHOLD = 25
@@ -42,14 +45,14 @@ class GameState:
         self.GREATEST_DISTANCE = self.env.size**2
         self.node_id_counter = 0
 
-    def run_loop(self) -> Role:
+    def run_loop(self) -> tuple[Role, list]:
         """
         Run the game.
 
         Returns:
             The winner of the game, or None if the game was impossible.
         """
-        print("----------STARTING GAME.-------------")
+        print(f"----------STARTING GAME #{self.episode}.-------------")
         # end immediately if field is intraversible
         if (
             self.env.get_shortest_distance(
@@ -59,7 +62,10 @@ class GameState:
             is None
         ):
             print("------ GAME OVER. The field was intraversible. ------")
-            return None
+            return (None, self.game_history)
+
+        # first, take a snapshot of the game field
+        self.game_history.append(self.env._graph)
 
         # Run game if no one has won
         while not self.is_pursuant_win() and not self.is_evader_win():
@@ -69,19 +75,17 @@ class GameState:
 
         if self.is_pursuant_win():
             print("------ GAME OVER. The evader was captured. ------")
-            gamestate_gif()
-            return Role.PURSUANT
+            return (Role.PURSUANT, self.game_history)
         else:
             print("------ GAME OVER. The evader escaped. ------")
-            gamestate_gif()
-            return Role.EVADER
+            return (Role.EVADER, self.game_history)
 
     def switch_turns(self):
         """
         Hand over state variables to the opponent.
         """
         # first, take a snapshot of the game field
-        gamestate_visual(self.env._graph, self.env.size, self.turn_count)
+        self.game_history.append(self.env._graph)
 
         # hand over turn and pos to adversary
         self.current_turn = get_adversary(self.current_turn)

@@ -6,7 +6,7 @@ import numpy as np
 import random
 from sklearn import tree
 
-# from graphviz import Digraph
+from graphviz import Digraph
 
 from PIL import Image
 import glob
@@ -14,15 +14,15 @@ import glob
 from utils import Occupancy, Node, Role
 
 
-def gamestate_visual(graph, size, n):
+def gamestate_visual(graph, size, episode, n):
     """
     Show plot of environment containing obstacles, pursuer, evader.
 
     Args:
         graph: an np array with initalized obstacles and agents
         size: the size n by n graph
+        episode: game this state belongs to
         n: image id
-        filename: path to file
     """
     # Convert Enums to integers if needed
     if graph.dtype == object:
@@ -60,12 +60,13 @@ def gamestate_visual(graph, size, n):
         labelbottom=False,
         labelleft=False,
     )
-    plt.savefig(f"images/graph_state_{n}")
+    plt.savefig(f"images/game_{episode}_turn_{n}")
 
 
 def gamestate_gif(
+    episode,
+    games,
     img_folder="images/",
-    output_gif_path="images/gamestate_gifs/gamestate1.gif",
     duration=500,
     loop=0,
 ):
@@ -74,10 +75,11 @@ def gamestate_gif(
 
     Args:
         image_folder (str): Path to the folder containing the images.
-        output_gif_path (str): Path and filename for the output GIF.
         duration (int): Duration of each frame in milliseconds.
         loop (int): Number of times the GIF should loop (0 for infinite loop).
     """
+    # TODO: use [games] to derive all gif images, ideally w/o making them all?
+
     image_files = sorted(
         glob.glob(f"{img_folder}/*.png")
     )  # Adjust extension as needed (e.g., *.jpg)
@@ -89,14 +91,13 @@ def gamestate_gif(
 
     # Save the first image, appending subsequent images to create the GIF
     images[0].save(
-        output_gif_path,
+        f"images/gamestate_gifs/game_{episode}.gif",
         save_all=True,
         append_images=images[1:],
         duration=duration,
         loop=loop,
         optimize=False,
     )
-    print(f"GIF successfully created at: {output_gif_path}")
 
 
 def visualize_game_tree(root: Node, n):
