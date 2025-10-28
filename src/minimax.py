@@ -1,130 +1,90 @@
-"""Decide actions for pursuer and evader"""
-
-import numpy as np
+"""
+Decide actions for pursuer and evader.
+"""
 
 from environment import Environment
-from utils import Occupancy, CellIndex, Role, Node
+from utils import Role, Node
 
 
-class MiniMaxAgent:
+class MiniMax:
     """
-    Implementing the minimax algorithm for an agent.
-
-    Attributes:
-        agent    
+    Implements the minimax algorithm with alpha-beta pruning to direct two adversarial agents.
     """
 
-    def __init__(self, is_maximizer: Role, start_loc):
-        """Initialize instance of MinMaxAgent class.
-        
-        Args:
-            role: 
-            is_maximizer (bool): true if agent wants to maximize
+    def __init__(self):
+        """
+        Initialize instance of MiniMaxAgent class.
         """
 
-        # Attributes
-        self.is_maximizer = is_maximizer
-
-        self.loc: CellIndex = start_loc
-        
-        self.depth = 3          # number of look-ahead moves
-        self.tree_log = []      # this should be a list of lists representing each tree
-
-        print(f"------ INITIALIZING {"EVADER" if self.is_maximizer else "PURSUANT"} ------")
-
-    def build_tree(self, env: Environment):
-        """
-        Calculate all possible paths of depth
-        
-        Returns:
-            tree:
-        """
-        # For each timestep agent compute
-        # Implementation to create a node list of dictionaries
-        # Of class Node, with set depth
-
-        node_list = []
-
-        # start with position
-        for _ in range(self.depth):
-            # A list containing the index of every empty cell
-            empty_list = env.get_valid_moves()
-
-            # Assign values to each empty position
-            weight_list = self.position_eval(empty_list)
-
-            for val in weight_list:
-                # Create a node for each branching decision
-                node = Node()
-                # EX: node = Node(0, "S0", 2, Role.MAXIMIZER, False)
-
-                # Appending nodes will auto populat based on depths
-                node_list.append(node)
-
-        # Log the decision tree for current compute
-        self.tree_log.append(node_list)
-        
-    def position_eval(self, ):
-            """
-            Evaluates the value of Manhattan distance.   
-
-            Args:
-                empty_list: a list of the empty indices from current position
-            Returns:
-                weight_list: a list repopulated with the weight     
-            """
-            # TODO: From the given empty index and the other agents location, calculate a value to describe the distance.
-            pass
-
-    def minimax(self, nodes, depth):
+    def minimax(
+        self,
+        node: Node,
+        depth: int,
+        alpha=-float("inf"),
+        beta=float("inf"),
+    ):
         """
         Recursive function to output the min/max value.
-        Prune the branch if...
-        
+        Prune the branch if alpha >= beta (or min/max values are equal), since no better option will be available through this route.
+
         Args:
-            nodes - possible paths for current timestep
-            depth - 
+            node: a single node in the game tree representing a game state
+            depth: current level in the tree, beginning with look-ahead depth
+            alpha: "worst-case scenario" value for maximizer, continually increases
+            beta: "worst-case scenario" value for minimizer, continually decreases
         """
-        val = 0
+        # Exit on base case: return heuristic value of node
+        # print(depth)
+        if depth == 1 or node.distance == 1:
+            # print(node.distance)
+            return node.distance
 
-
-        # Exit on base case
-        if depth == 0:
-            return val      # Return the val which maps to a CellIndex
-
-
-        if self.is_maximizer:
-            max_eval = -float('inf')
-            for n_sub in nodes:
-                eval = self.minimax(n_sub, depth-1)       # Input args
-                min_eval = max(eval, min_eval)
+        # Evader
+        if node.agent_role == Role.EVADER:
+            max_eval = -float("inf")
+            for child in node.children:
+                max_eval = max(
+                    max_eval,
+                    ret := self.minimax(
+                        child,
+                        depth - 1,
+                        alpha,
+                        beta,
+                    ),
+                )
+                # print(f"Evader: {ret}")
                 # Pruning implementation
+                if max_eval >= beta:
+                    break
+                alpha = max(alpha, max_eval)
             return max_eval
+
+        # Pursuant
         else:
-            min_eval = float('inf')
-            for n_sub in nodes:
-                eval = self.minimax(n_sub, depth-1)       # Input args
-                min_eval = min(eval, max_eval)
+            min_eval = float("inf")
+            for child in node.children:
+                min_eval = min(
+                    min_eval,
+                    ret := self.minimax(
+                        child,
+                        depth - 1,
+                        alpha,
+                        beta,
+                    ),
+                )
+                # print(f"Pursuant: {ret}")
                 # Pruning implementation
+                if min_eval <= alpha:
+                    break
+                beta = min(beta, min_eval)
             return min_eval
 
-    def _get_next(self, env, self_pos: CellIndex, opp_pos: CellIndex) -> CellIndex:
+    def evaluate_heuristic(node: Node, env: Environment):
         """
-        Calls minimax to compute next best move.
-        
+        Given a node containing agent states and the world those agents are in, return the distance between those states; essentially, evaluate the heuristic value of the given node.
+
         Args:
-            env: a game state
-            self_pos: position of agent
-            opp_pos: position of opponent agent
-        
-        Return:
-            CellIndex of next location
+            node (Node): the game state to evaluate
+            env (Environment): the obstacle-filled world
         """
-        self.build_tree(env, self_pos, opp_pos)
-        best_move = self.minimax(nodes=self.tree_log[-1], depth=self.depth)
-
-        # Internally update location
-        self.loc = best_move
-
-        return best_move
-        
+        return env.get_shortest_distance(node.pursuant_state, node.evader_state)
