@@ -5,7 +5,7 @@ from utils import Role
 
 if __name__ == "__main__":
     results = []
-    for episode in range(0, 100):
+    for episode in range(0, 10):
         game = GameState(episode)
         winner, game_history = game.run_loop()
         results.append(winner)

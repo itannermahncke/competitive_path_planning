@@ -89,24 +89,27 @@ def role_to_occupancy(agent: Role) -> Occupancy:
 @dataclass
 class Node:
     # personal attributes
-    id: int
+    # id: int
     depth: int
     # game state attributes
     agent_role: Role
     pursuant_state: CellIndex
     evader_state: CellIndex
     distance: int
-    action_from_parent: Action
-    # relational attributes
-    parent: Optional["Node"]
-    children: list[Optional["Node"]]
+    children_list: list
+    # action_from_parent: Action
+    # # relational attributes
+    # parent: Optional["Node"]
+    # children: list[Optional["Node"]]
 
     def to_dict(self):
         return {
-            "id": self.id,
+            # "id": self.id,
             "depth": self.depth,
             "role": self.agent_role.name,
             "pursuant state": self.pursuant_state,
             "evader state": self.evader_state,
-            "action taken": self.action_from_parent,
+            "distance": self.distance,
+            # "action taken": self.action_from_parent,
+            "children list": self.children_list
         }
