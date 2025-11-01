@@ -1,4 +1,4 @@
-"""Compare different game outcomes when adjusting initializaing paramaters."""
+"""Compare different game outcomes when adjusting initializing parameters."""
 
 from gamestate import GameState
 from utils import Role
@@ -6,6 +6,7 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 
 def run_sweep(n, density_vals, depth_vals):
