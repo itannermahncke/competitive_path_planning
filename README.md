@@ -2,7 +2,7 @@
 > **MTH 2110 Discrete Math:** Combinatorics and Graph Theory
 **Contributors:** Irene Hong, Ivy Mahncke, Vivian Mak
 
-!["game demo"](docs/game_0.gif)
+!["game demo"](https://github.com/itannermahncke/competitive_path_planning/blob/main/docs/gamestate_gifs/game_0.gif)
 
 ## Project Overview
 For this project, we implemented the minimax algorithm with alpha-beta pruning to optimize two competing mobile robots in a pursuer-evader game.
