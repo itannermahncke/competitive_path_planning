@@ -60,13 +60,13 @@ def gamestate_visual(graph, size, episode, n):
         labelbottom=False,
         labelleft=False,
     )
-    plt.savefig(f"images/game_{episode}_turn_{n}")
+    n = str(n).zfill(3)
+    plt.savefig(f"docs/game_{episode}_turn_{n}")
 
 
 def gamestate_gif(
     episode,
-    games,
-    img_folder="images/",
+    img_folder="docs/",
     duration=500,
     loop=0,
 ):
@@ -91,7 +91,7 @@ def gamestate_gif(
 
     # Save the first image, appending subsequent images to create the GIF
     images[0].save(
-        f"images/gamestate_gifs/game_{episode}.gif",
+        f"docs/gamestate_gifs/game_{episode}.gif",
         save_all=True,
         append_images=images[1:],
         duration=duration,
@@ -133,5 +133,5 @@ def visualize_game_tree(root: Node, n):
     add_node(root)
 
     # Save and render
-    dot.render(f"images/game_tree_{0}", format="png", cleanup=True)
+    dot.render(f"docs/game_tree_{0}", format="png", cleanup=True)
     return dot

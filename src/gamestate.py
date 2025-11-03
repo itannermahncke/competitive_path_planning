@@ -3,7 +3,7 @@
 from environment import Environment
 from minimax import MiniMax
 from utils import CellIndex, Role, Node, get_adversary, derive_action
-from visualizations import gamestate_gif
+from visualizations import gamestate_gif, gamestate_visual
 
 
 class GameState:
@@ -66,6 +66,12 @@ class GameState:
 
         # first, take a snapshot of the game field
         self.game_history.append(self.env._graph)
+        gamestate_visual(
+            self.env._graph,
+            self.env.size,
+            self.episode,
+            self.turn_count,
+        )
 
         # Run game if no one has won
         while not self.is_pursuant_win() and not self.is_evader_win():
@@ -84,15 +90,21 @@ class GameState:
         """
         Hand over state variables to the opponent.
         """
+        # iterate
+        self.turn_count += 1
+
         # first, take a snapshot of the game field
         self.game_history.append(self.env._graph)
+        gamestate_visual(
+            self.env._graph,
+            self.env.size,
+            self.episode,
+            self.turn_count,
+        )
 
         # hand over turn and pos to adversary
         self.current_turn = get_adversary(self.current_turn)
         self.current_agent_pos = self.env.get_agent_cell(self.current_turn)
-
-        # iterate
-        self.turn_count += 1
 
     def compute_next_move(self):
         """
