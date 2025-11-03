@@ -18,12 +18,13 @@ To win the game, the pursuant must be in a node adjacent to the evader’s curre
 
 
 ```
-## Design Decisions
-### Agents
-Each agent (pursuer and evader) are separate instances of the MiniMaxAgent class. We want agents to use minimax logic to plan indepenently, as opposed to a centralized search that alternates turn internally. This forces the algorithm to constantly compute similarly to real-time since taking turns doesn't exist. Each agent's action is computed for the next timestep without knowing where the other agent will end up.
-
 
 ## How To Run
 ```
 
 ```
+
+## Resources
+- Primer on Minimax and AB Pruning https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence/
+- Understanding the Minimax Algorithm w/ AB Pruning https://www.youtube.com/watch?v=l-hh51ncgDI
+- Creating the environment visuals https://stackoverflow.com/questions/56614725/generate-grid-cells-occupancy-grid-color-cells-and-remove-xlabels 
