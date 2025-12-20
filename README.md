@@ -1,5 +1,5 @@
 # Competitive Path Planning With Alpha-Beta Pruning
-> **MTH 2110 Discrete Math:** Combinatorics and Graph Theory
+> **MTH 2110 Discrete Math:** Combinatorics and Graph Theory\
 **Contributors:** Irene Hong, Ivy Mahncke, Vivian Mak
 
 !["game demo"](https://github.com/itannermahncke/competitive_path_planning/blob/main/docs/gamestate_gifs/game_0.gif)
